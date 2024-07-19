@@ -1,4 +1,4 @@
-function test_symplecticRK2_4Order()
+function test_symplectic_RK_2Level_4Order()
 clear variables
 close all
 clc
