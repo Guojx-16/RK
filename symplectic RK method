@@ -1,0 +1,57 @@
+function test_symplecticRK2_4Order()
+clear variables
+close all
+clc
+%% init data
+z0=[1;1;1;1];
+a=0;b=2;
+NN=10;
+mk1=1;mk2=5;
+maxErr=zeros(mk2-mk1+1,1);
+%% Rhs
+S=[4,3,2,1;3,4,3,2;2,3,4,3;1,2,3,4];
+J4=[0,0,0,1;0,0,1,0;0,-1,0,0;-1,0,0,0];
+B=J4\S;
+I=eye(size(B));
+%% Coefficient
+b11=1/4;b12=1/4-sqrt(3)/6;
+b21=1/4+sqrt(3)/6;b22=1/4;
+a1=1;a2=1;
+c1=0.5;c2=0.5;
+%% 
+h=zeros(mk2-mk1+1,1);
+for mk=mk1:mk2
+    N=NN*2^(mk-1);
+    h(mk)=(b-a)/N;
+    tn=a:h(mk):b;
+
+    
+    zh=zeros(4,N+1);
+    zexact=zeros(4,N+1);
+    zh(:,1)=z0;
+    zexact(:,1)=z0;
+
+    A=[I-b11*h(mk)*B,-h(mk)*b12*B;-h(mk)*b21*B,I-b22*h(mk)*B];
+    for n=1:N
+        zmzm=[zh(:,n);zh(:,n)];
+        K=A\zmzm;
+        zh(:, n+1) = zh(:, n) + h(mk) * (c1 * B*K(1:4) + c2 *B* K(5:end));
+        zexact(:,n+1)=expm(tn(n+1)*B)*z0;
+    end
+    if mk==1
+        subplot(2,1,1);
+        plot(tn,zh(1,:),'o-')
+        title('Numerical solution')
+        subplot(2,1,2);
+        plot(tn,zexact(1,:),'*-')
+        title('Exact solution')
+    end
+    maxErr(mk-mk1+1)=max(abs(zexact(1,:)-zh(1,:)))+max(abs(zexact(2,:)-zh(2,:)))...
+        +max(abs(zexact(3,:)-zh(3,:)))+max(abs(zexact(4,:)-zh(4,:))); 
+    if mk==mk1
+        %fprintf('%0.2e\t')
+        fprintf('\n%0.8f\t%0.5f\t',maxErr(mk),0)
+    else
+        fprintf('\n%0.6f\t %0.5f\t',maxErr(mk),log2(maxErr(mk-mk1)/maxErr(mk-mk1+1)))
+    end
+end
